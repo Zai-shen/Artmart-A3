@@ -30,6 +30,7 @@ export function confirmMockPaymentIntent(pid, success) {
 
 fetchMock.post('path:/s20/bling/payment_intents', (url, opts) => {
   if (!opts.headers || opts.headers['Authorization'] != 'Basic ' + btoa(process.env.BLING_API_KEY+':')) { return 403; }
+  try { opts.body = JSON.parse(opts.body); } catch (e) { return 400; }
   if (!opts.body.amount || isNaN(opts.body.amount)) { return 400; }
   if (opts.body.currency != 'eur') { return 400; }
 
