@@ -7,3 +7,4 @@ node_modules/
 report.html
 server/orders/order-*.json
 !server/orders/order-0000.json
+tmp.txt
