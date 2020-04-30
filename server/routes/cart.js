@@ -22,7 +22,32 @@ class CartItem
     this.matColor   = matColor;
     this.matWidth   = matWidth;
   }
+
+  printSizeValid  = () => ['S', 'M', 'L'].includes(this.printSize);
+  frameStyleValid = () => ['classic', 'natural', 'shabby', 'elegant'].includes(this.frameStyle);
+  frameWidthValid = () => 20 <= this.frameWidth && this.frameWidth <= 50;
+  matColorValid   = () => ['ivory', 'mint', 'wine', 'indigo', 'coal'].includes(this.matColor);
+  matWidthValid   = () => 0 <= this.matWidth && this.matWidth <= 100;
+
+  validate() {
+    let report = {};
+    if (!this.artworkId) report.artworkId = "missing";
+    if (!this.printSize) report.printSize = "missing";
+    else if (!this.printSizeValid()) report.printSize = "invalid";
+    if (!this.frameStyle) report.frameStyle = "missing";
+    else if (!this.frameStyleValid()) report.frameStyle = "invalid";
+    if (!this.frameWidth) report.frameWidth = "missing";
+    else if (!this.frameWidthValid()) report.frameWidth = "invalid";
+    if (this.matWidth != 0) {
+      if (!this.matColor) report.matColor = "missing";
+      else if (!this.matColorValid()) report.matColor = "invalid";
+    }
+    if (!this.matWidth) report.matWidth = "missing";
+    else if (!this.matWidthValid()) report.matWidth = "invalid";
+    return report;
+  }
 }
+
 
 class Cart
 {
@@ -36,6 +61,7 @@ class Cart
   static delete(sessionId) { return Cart.carts.delete(sessionId); }
 
   clear() { this.items = []; }
+  add(item) { this.items.push(item); }
 }
 
 
@@ -48,7 +74,7 @@ routes.get('/', (req, res) => {
     let sessionId = nanoid.nanoid();
     Cart.create(sessionId);
     res.cookie('sessionId', sessionId, { path: '/cart' });
-    res.send({});
+    res.send([]);
   } else {
     // if client reports valid session cookie, send content
     let result = Cart.get(req.cookies.sessionId);
@@ -61,10 +87,33 @@ routes.get('/', (req, res) => {
   }
 });
 
-// TODO: implement
 // handles POST /cart
 routes.post('/', (req, res) => {
-  res.sendStatus(501);  // 501 Not Implemented
+  let sessionId = req.cookies.sessionId;
+  let cart = Cart.get(sessionId);
+  if (!cart) {
+    res.sendStatus(403);  // 403 Forbidden
+  } else {
+    let item = new CartItem(
+      req.body.artworkId,
+      req.body.printSize,
+      req.body.frameStyle,
+      req.body.frameWidth,
+      req.body.matColor,
+      req.body.matWidth
+    );
+    let validityErrors = item.validate();
+    if (JSON.stringify(validityErrors) === "{}") {
+      cart.add(item);
+      res.sendStatus(201);  // 201 Created
+    } else {
+      let response = {
+        message: "Validation failed",
+        errors: validityErrors
+      };
+      res.status(400).json(response);
+    }
+  }
 });
 
 // handles DELETE /cart
