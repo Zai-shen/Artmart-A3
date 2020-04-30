@@ -44,7 +44,7 @@ class CartItem
       if (!this.matColor) report.matColor = "missing";
       else if (!this.matColorValid()) report.matColor = "invalid";
     }
-    if (!this.matWidth) report.matWidth = "missing";
+    if (!this.matWidth && this.matWidth != 0) report.matWidth = "missing";
     else if (!this.matWidthValid()) report.matWidth = "invalid";
     return report;
   }
@@ -115,9 +115,9 @@ routes.post('/', (req, res) => {
       req.body.artworkId,
       req.body.printSize,
       req.body.frameStyle,
-      req.body.frameWidth,
+      Number.parseInt(req.body.frameWidth),
       req.body.matColor,
-      req.body.matWidth
+      Number.parseInt(req.body.matWidth)
     );
     let validityErrors = item.validate();
     if (JSON.stringify(validityErrors) === "{}") {
@@ -151,7 +151,6 @@ routes.get('/:id', (req, res) => {
   let cart = Cart.get(req.cookies.sessionId);
   if (cart) {
     let itemId = Number.parseInt(req.params.id);
-    console.log(itemId);
     let item = cart.item(itemId);
     if (item) {
       let itemData = {
@@ -172,7 +171,6 @@ routes.delete('/:id', (req, res) => {
   let cart = Cart.get(req.cookies.sessionId);
   if (cart) {
     let itemId = Number.parseInt(req.params.id);
-    console.log(itemId);
     let item = cart.item(itemId);
     if (item) {
       cart.remove(itemId);

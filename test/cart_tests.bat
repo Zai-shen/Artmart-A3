@@ -6,7 +6,8 @@
 SETLOCAL
 set cartURL=http://localhost:3000/cart/
 set cookie=tmp.txt
-set example=example_artwork.json
+set example1=example_artwork1.json
+set example2=example_artwork2.json
 
 echo.
 echo.
@@ -28,7 +29,7 @@ curl -v -c %cookie% %cartURL%
 echo.
 echo.
 echo Add a valid item to the previously created cart:
-curl -v -b %cookie% -H "Content-Type: application/json" -d @%example% %cartURL%
+curl -v -b %cookie% -H "Content-Type: application/json" -d @%example1% %cartURL%
 
 echo.
 echo.
@@ -37,8 +38,8 @@ curl -v -b %cookie% %cartURL%
 
 echo.
 echo.
-echo Add a bunch of identical valid items:
-for /l %%i in (1,1,10) do curl -s -b %cookie% -H "Content-Type: application/json" -d @%example% %cartURL%
+echo Add a bunch of valid items:
+for /l %%i in (1,1,10) do curl -s -b %cookie% -H "Content-Type: application/json" -d @%example1% %cartURL%
 
 echo.
 echo.
