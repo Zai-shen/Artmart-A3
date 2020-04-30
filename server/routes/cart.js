@@ -10,11 +10,13 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const nanoid = require('nanoid');
+const price = require('../utils/price');
 
 
 class CartItem
 {
   constructor(artworkId, printSize, frameStyle, frameWidth, matColor, matWidth) {
+    this.price      = price.calculatePrice(printSize, frameStyle, frameWidth, matWidth);
     this.artworkId  = artworkId;
     this.printSize  = printSize;
     this.frameStyle = frameStyle;
@@ -52,7 +54,8 @@ class CartItem
 class Cart
 {
   constructor() {
-    this.items = [];
+    this.items = new Map();
+    this.curId = 1;
   }
 
   static carts = new Map();
@@ -60,12 +63,25 @@ class Cart
   static get(sessionId) { return Cart.carts.get(sessionId); }
   static delete(sessionId) { return Cart.carts.delete(sessionId); }
 
-  clear() { this.items = []; }
-  add(item) { this.items.push(item); }
+  add(item) { this.items.set(this.curId++, item); }
+  item(cartItemId) { this.items.get(itemId); }
+  remove(cartItemId) { this.items.delete(cartItemId); }
+  clear() { this.items.clear(); this.curId = 1; }
+
+  toJSON() {
+    let result = [];
+    this.items.forEach((val,key,map) => {
+      let item = {
+        cartItemId: key,
+        ...val
+      };
+      result.push(item);
+    });
+    return result;
+  }
 }
 
 
-// TODO: implement
 // handles GET /cart
 routes.get('/', (req, res) => {
   res.removeHeader('X-Powered-By');
@@ -79,7 +95,6 @@ routes.get('/', (req, res) => {
     // if client reports valid session cookie, send content
     let result = Cart.get(req.cookies.sessionId);
     if (result) {
-      // TODO: format response content
       res.send(result);
     } else {
       res.sendStatus(403);  // 403 Forbidden
@@ -89,11 +104,13 @@ routes.get('/', (req, res) => {
 
 // handles POST /cart
 routes.post('/', (req, res) => {
+  // validate client's session cookie
   let sessionId = req.cookies.sessionId;
   let cart = Cart.get(sessionId);
   if (!cart) {
     res.sendStatus(403);  // 403 Forbidden
   } else {
+    // parse received item data
     let item = new CartItem(
       req.body.artworkId,
       req.body.printSize,
@@ -104,9 +121,11 @@ routes.post('/', (req, res) => {
     );
     let validityErrors = item.validate();
     if (JSON.stringify(validityErrors) === "{}") {
+      // if data is valid, add item to cart
       cart.add(item);
       res.sendStatus(201);  // 201 Created
     } else {
+      // otherwise send error report
       let response = {
         message: "Validation failed",
         errors: validityErrors
@@ -118,7 +137,7 @@ routes.post('/', (req, res) => {
 
 // handles DELETE /cart
 routes.delete('/', (req, res) => {
-  let cart = Cart.get(req.cookie.sessionId);
+  let cart = Cart.get(req.cookies.sessionId);
   if (cart) {
     cart.clear();
     res.sendStatus(204);  // 204 No Content

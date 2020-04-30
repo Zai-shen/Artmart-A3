@@ -6,22 +6,32 @@ set example=example_artwork.json
 
 echo.
 echo.
-echo GET /cart without session cookie:
-curl -v -c %cookie% %cartURL%
-
-echo.
-echo.
-echo GET /cart with invalid session cookie:
+echo Request cart contents with invalid session cookie:
 curl -v -b sessionId=anInvalidCookie %cartURL%
 
 echo.
 echo.
-echo GET /cart with previously received session cookie:
+echo Request and store session cookie:
+curl -v -c %cookie% %cartURL%
+
+echo.
+echo.
+echo Add a valid item to the previously created cart:
+curl -v -b %cookie% -H "Content-Type: application/json" -d @%example% %cartURL%
+
+echo.
+echo.
+echo Request cart contents with previously received session cookie:
 curl -v -b %cookie% %cartURL%
 
 echo.
 echo.
-echo POST /cart with previously received session cookie and valid payload:
-curl -v -b %cookie% -H "Content-Type: application/json" -d @%example% %cartURL%
+echo Delete cart contents with previously received session cookie:
+curl -v -X DELETE -b %cookie% %cartURL%
+
+echo.
+echo.
+echo Request cart contents again with previously received session cookie:
+curl -v -b %cookie% %cartURL%
 
 ENDLOCAL
