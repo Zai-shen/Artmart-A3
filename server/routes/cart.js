@@ -64,8 +64,8 @@ class Cart
   static delete(sessionId) { return Cart.carts.delete(sessionId); }
 
   add(item) { this.items.set(this.curId++, item); }
-  item(cartItemId) { this.items.get(itemId); }
-  remove(cartItemId) { this.items.delete(cartItemId); }
+  item(cartItemId) { return this.items.get(cartItemId); }
+  remove(cartItemId) { return this.items.delete(cartItemId); }
   clear() { this.items.clear(); this.curId = 1; }
 
   toJSON() {
@@ -146,16 +146,43 @@ routes.delete('/', (req, res) => {
   }
 });
 
-// TODO: implement
 // handles GET /cart/{id}
-routes.get('/', (req, res) => {
-  res.sendStatus(501);  // 501 Not Implemented
+routes.get('/:id', (req, res) => {
+  let cart = Cart.get(req.cookies.sessionId);
+  if (cart) {
+    let itemId = Number.parseInt(req.params.id);
+    console.log(itemId);
+    let item = cart.item(itemId);
+    if (item) {
+      let itemData = {
+        cartItemId: itemId,
+        ...item
+      }
+      res.json(itemData);
+    } else {
+      res.sendStatus(404);  // 404 Not Found
+    }
+  } else {
+    res.sendStatus(403);  // 403 Forbidden
+  }
 });
 
-// TODO: implement
 // handles DELETE /cart/{id}
-routes.delete('/', (req, res) => {
-  res.sendStatus(501);  // 501 Not Implemented
+routes.delete('/:id', (req, res) => {
+  let cart = Cart.get(req.cookies.sessionId);
+  if (cart) {
+    let itemId = Number.parseInt(req.params.id);
+    console.log(itemId);
+    let item = cart.item(itemId);
+    if (item) {
+      cart.remove(itemId);
+      res.sendStatus(204);  // 204 No Content
+    } else {
+      res.sendStatus(404);  // 404 Not Found
+    }
+  } else {
+    res.sendStatus(403);  // 403 Forbidden
+  }
 });
 
 
