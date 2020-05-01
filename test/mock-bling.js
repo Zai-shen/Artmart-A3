@@ -19,7 +19,7 @@ export function confirmMockPaymentIntent(pid, success) {
   payment_intent.status = success ? 'succeeded' : 'failed';
   if (!success) { payment_intent.payment_error = 'card_declined'; }
   payment_intent.card = {
-    name: chance.name(),
+    cardholder: chance.name(),
     last4: chance.cc().slice(-4),
     exp_month: parseInt(chance.exp_month()),
     exp_year: parseInt(chance.exp_year())
